@@ -1,0 +1,914 @@
+:root {
+  --bg-dark: #131f2b;
+  --bg-panel: #192836;
+  --bg-card: #1d2f40;
+  --bg-card-alt: #24394d;
+  --border-color: #2e4760;
+  --text-main: #f1f5f9;
+  --text-muted: #8fa6bc;
+  --accent-mint: #00d68f;
+  --accent-cyan: #0ea5e9;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --accent-purple: #a855f7;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  line-height: 1.4;
+  padding-bottom: 30px;
+}
+
+/* ============================================================================
+   CABECERA Y PESTAÑAS SUPERIORES ESTILO APP MÓVIL (COMO EN LA CAPTURA)
+============================================================================ */
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: #162430;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.app-header {
+  padding: 10px 14px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-title {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.rider-pill {
+  background: rgba(0, 214, 143, 0.14);
+  border: 1px solid rgba(0, 214, 143, 0.45);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  color: var(--accent-mint);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Barra de pestañas debajo del título (Pronóstico | Medidor Spot | Histórico | Mi Quiver) */
+.top-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #162430;
+}
+
+.top-tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-muted);
+  padding: 10px 4px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.top-tab-btn.active {
+  color: var(--accent-mint);
+  border-bottom-color: var(--accent-mint);
+  font-weight: 700;
+}
+
+/* Contenedor Principal */
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.padded-section {
+  padding: 14px;
+}
+
+.tab-section {
+  display: none;
+}
+
+.tab-section.active {
+  display: block;
+}
+
+/* ============================================================================
+   MAPA COMPARTIDO DEL CENTRO DEL PANTANO (LAS CRUCERAS)
+============================================================================ */
+.spot-map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 255px;
+  overflow: hidden;
+  background: #8ec5ea;
+  user-select: none;
+  -webkit-user-select: none;
+  border-bottom: 1px solid var(--border-color);
+}
+
+@media (min-width: 768px) {
+  .spot-map-wrapper {
+    height: 310px;
+    border-radius: 0 0 14px 14px;
+  }
+}
+
+#burguillo-map {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.wind-compass-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wind-compass-svg {
+  width: 225px;
+  height: 225px;
+  pointer-events: auto;
+  cursor: grab;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.22));
+}
+
+.wind-compass-svg:active {
+  cursor: grabbing;
+}
+
+.map-coords-badge {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  z-index: 15;
+  background: rgba(22, 36, 48, 0.84);
+  backdrop-filter: blur(6px);
+  color: #f8fafc;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.map-coords-badge small {
+  color: var(--accent-mint);
+  font-size: 0.66rem;
+}
+
+.map-layer-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 15;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: rgba(98, 112, 122, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.leaflet-control-attribution {
+  display: none !important;
+}
+
+/* ============================================================================
+   PANEL DE PRONÓSTICO 7D VISUAL (ESTILO APP DE LA CAPTURA)
+============================================================================ */
+.forecast-control-panel {
+  background: var(--bg-panel);
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Píldoras de Modelos (GFS27, ECMWF, AROME, ICON7, CONSENSO) */
+.model-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.model-pills-row::-webkit-scrollbar {
+  display: none;
+}
+
+.model-pill {
+  background: #111c26;
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 13px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.model-pill.active {
+  background: var(--accent-mint);
+  color: #06281e;
+  border-color: var(--accent-mint);
+  font-weight: 800;
+}
+
+/* Tira de días (sá 07, do 08, lu 09...) */
+.week-days-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.week-day-item {
+  padding: 4px 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.week-day-item.active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.week-day-name {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  text-transform: lowercase;
+}
+
+.week-day-num {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  margin-top: 1px;
+}
+
+/* Solo se pinta en verde el día que REALMENTE tiene ventana de planeo (>=13 kt) */
+.week-day-item.has-wind .week-day-name,
+.week-day-item.has-wind .week-day-num {
+  color: var(--accent-mint);
+}
+
+/* Barra horizontal continua de resumen de viento de los 7 días */
+.wind-overview-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.wind-overview-icon {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.wind-overview-track {
+  position: relative;
+  flex: 1;
+  height: 11px;
+  border-radius: 999px;
+  background: #2b4257;
+  overflow: visible;
+  cursor: pointer;
+  display: flex;
+}
+
+.wind-overview-seg {
+  flex: 1;
+  height: 100%;
+}
+
+.wind-overview-seg:first-child {
+  border-radius: 999px 0 0 999px;
+}
+
+.wind-overview-seg:last-child {
+  border-radius: 0 999px 999px 0;
+}
+
+.wind-overview-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #162430;
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  transition: left 0.12s ease-out;
+}
+
+/* Banner de recomendación para la hora seleccionada */
+.selected-hour-gear-bar {
+  background: #111c26;
+  border-bottom: 1px solid var(--border-color);
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sh-time-badge {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #e2e8f0;
+}
+
+.sh-gear-proposal {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-mint);
+}
+
+/* ============================================================================
+   TABLA HORIZONTAL VISUAL POR HORAS (ESTILO CAPTURA MÓVIL)
+============================================================================ */
+.wx-strip-wrapper {
+  display: flex;
+  background: #162430;
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+}
+
+/* Columna izquierda fija de etiquetas (1h, m/vela, ↗, kts, kts, °C, mm/h) */
+.wx-labels-col {
+  width: 46px;
+  flex-shrink: 0;
+  background: #192836;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.wx-label-day-spacer {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wx-label-hour {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wx-1h-badge {
+  background: #23384a;
+  color: var(--accent-mint);
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.wx-label-sail {
+  height: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.66rem;
+  line-height: 1.1;
+}
+
+.wx-label-row {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Contenedor deslizable horizontal de columnas horarias */
+.wx-hours-scroll {
+  flex: 1;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+}
+
+.wx-day-group {
+  display: flex;
+  flex-direction: column;
+  border-right: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.wx-day-group-header {
+  height: 30px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  background: #162430;
+  white-space: nowrap;
+  position: sticky;
+  left: 0;
+}
+
+.wx-day-group-header small {
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.68rem;
+}
+
+.wx-day-cols {
+  display: flex;
+}
+
+.wx-hour-col {
+  width: 48px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  cursor: pointer;
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.12s;
+}
+
+.wx-hour-col.selected {
+  background: rgba(255, 255, 255, 0.11);
+  outline: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.wx-cell-hour {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Celda con icono de Vela + medida (apagado si no hay planeo, iluminado si se navega) */
+.wx-cell-sail {
+  height: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 3px 1px;
+}
+
+.wx-sail-gear-txt {
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.wx-cell-dir {
+  height: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.wx-cell-kt {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0b1520;
+}
+
+.wx-cell-temp {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: #ebd36b;
+  color: #1e293b;
+}
+
+.wx-cell-rain {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  background: #162430;
+}
+
+/* ============================================================================
+   TARJETAS Y CONTROLES DEL RESTO DE PESTAÑAS
+============================================================================ */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 15px;
+  margin-bottom: 14px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.card-subtitle {
+  font-size: 0.77rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.unit-selector {
+  display: inline-flex;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.unit-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.unit-btn.active {
+  background: var(--accent-mint);
+  color: #06281e;
+}
+
+.meter-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 680px) {
+  .meter-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+}
+
+.slider-box {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.slider-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.slider-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.slider-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.step-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-dark);
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent-mint);
+  height: 7px;
+  cursor: pointer;
+}
+
+.compass-wheel {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.compass-btn {
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 7px 3px;
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.compass-btn span {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.compass-btn.dir-excelente {
+  border-color: rgba(0, 214, 143, 0.45);
+}
+
+.compass-btn.active {
+  background: var(--accent-mint);
+  color: #06281e;
+  border-color: var(--accent-mint);
+}
+
+.compass-btn.active span {
+  color: #06281e;
+}
+
+.rec-banner {
+  border-radius: var(--radius-lg);
+  padding: 15px;
+  border: 2px solid var(--accent-mint);
+  background: rgba(0, 214, 143, 0.08);
+  margin-bottom: 14px;
+}
+
+.rec-banner.status-no_planeo {
+  border-color: #4f6d8c;
+  background: rgba(79, 109, 140, 0.12);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  background: rgba(0, 214, 143, 0.2);
+  color: var(--accent-mint);
+}
+
+.rec-combo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+@media (max-width: 480px) {
+  .rec-combo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gear-box {
+  background: rgba(19, 31, 43, 0.85);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 11px;
+}
+
+.gear-type {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.gear-name {
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #fff;
+  margin-top: 2px;
+}
+
+.gear-specs {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.trim-list {
+  margin-top: 10px;
+  padding-left: 18px;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: 0.84rem;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent-mint);
+  color: #06281e;
+}
+
+.btn-secondary {
+  background: var(--bg-card-alt);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.btn-danger {
+  background: rgba(244, 63, 94, 0.2);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.4);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+th, td {
+  padding: 7px 8px;
+  text-align: center;
+  border-bottom: 1px solid rgba(46, 71, 96, 0.55);
+}
+
+th {
+  background: var(--bg-dark);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.kt-pill {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-weight: 800;
+  font-size: 0.76rem;
+}
+
+.kt-low { background: #4f6d8c; color: #0b1520; }
+.kt-marginal { background: #38bdf8; color: #082f49; }
+.kt-good { background: #22c55e; color: #052e16; }
+.kt-strong { background: #eab308; color: #422006; }
+.kt-nuke { background: #ec4899; color: #fff; }
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.form-control {
+  width: 100%;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+}
+
+.source-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.source-card {
+  display: block;
+  text-decoration: none;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 11px;
+  color: var(--text-main);
+}
+
+.source-card h4 {
+  font-size: 0.86rem;
+  color: var(--accent-mint);
+  margin-bottom: 4px;
+}
+
+.source-card p {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}

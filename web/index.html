@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#162430" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Embalse El Burguillo · WindMon</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="./styles.css?v=6" />
+</head>
+<body>
+
+  <!-- Barra Superior y Pestañas Estilo App Móvil (igual que la captura) -->
+  <div class="app-topbar">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-title">Embalse El Burguillo</span>
+      </div>
+      <button class="rider-pill" onclick="switchTab('quiver')" id="header-rider-pill">
+        70 kg · Goya / North / Loft
+      </button>
+    </header>
+
+    <nav class="top-tabs">
+      <button class="top-tab-btn active" data-tab="forecast" onclick="switchTab('forecast')">Pronóstico</button>
+      <button class="top-tab-btn" data-tab="spot" onclick="switchTab('spot')">Medidor Spot</button>
+      <button class="top-tab-btn" data-tab="history" onclick="switchTab('history')">Historial</button>
+      <button class="top-tab-btn" data-tab="quiver" onclick="switchTab('quiver')">Mi Quiver</button>
+    </nav>
+  </div>
+
+  <main class="container">
+
+    <!-- =====================================================================
+         MAPA DEL CENTRO DEL PANTANO (COMPARTIDO EN PRONÓSTICO Y MEDIDOR SPOT)
+    ====================================================================== -->
+    <div class="spot-map-wrapper" id="shared-map-wrapper">
+      <div id="burguillo-map">
+        <!-- Base vectorial offline del cruce de Las Cruceras / Arroyo de la Parra -->
+        <svg viewBox="0 0 800 420" preserveAspectRatio="xMidYMid slice" style="position:absolute; inset:0; z-index:0; width:100%; height:100%; display:block; background:#8ec5ea;">
+          <path d="M0,0 L410,0 L415,48 L390,90 L405,135 L355,155 L310,148 L245,172 L205,180 L175,140 L105,155 L20,115 L0,130 Z" fill="#e9e5d8" />
+          <path d="M475,0 L800,0 L800,165 L750,158 L705,180 L615,175 L575,145 L560,75 L485,35 Z" fill="#e9e5d8" />
+          <path d="M475,0 L565,0 L560,75 L490,35 Z" fill="#d9e5c9" />
+          <ellipse cx="438" cy="118" rx="11" ry="16" fill="#e9e5d8" />
+          <ellipse cx="496" cy="115" rx="13" ry="18" fill="#e9e5d8" />
+          <path d="M0,250 L35,248 L88,285 L125,270 L165,305 L205,302 L238,340 L230,420 L0,420 Z" fill="#cbe3b3" />
+          <path d="M365,420 L385,350 L425,310 L465,305 L495,280 L545,220 L585,215 L612,245 L635,345 L680,365 L755,335 L800,348 L800,420 Z" fill="#e9e5d8" />
+          <path d="M395,420 L420,330 L485,300 L545,225 L585,220 L608,260 L585,420 Z" fill="#cbe3b3" />
+          <path d="M565,0 C558,65 562,125 588,162 C625,195 720,185 800,175" fill="none" stroke="#ffffff" stroke-width="5" />
+          <path d="M412,420 C445,355 495,285 552,222 C585,212 615,245 635,340" fill="none" stroke="#ffffff" stroke-width="4.5" />
+          <g font-family="sans-serif" font-weight="700" fill="#334155" stroke="#ffffff" stroke-width="4" paint-order="stroke">
+            <text x="515" y="66" font-size="24">Arroyo de</text>
+            <text x="530" y="96" font-size="24">la Parra</text>
+            <text x="430" y="295" font-size="25" text-anchor="middle">Las Cruceras</text>
+            <text x="715" y="268" font-size="23" text-anchor="middle">Piquer</text>
+            <text x="48" y="348" font-size="23">Rinconada</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Coordenadas y contexto de la hora/medición -->
+      <div class="map-coords-badge">
+        <span id="map-spot-title">📍 Las Cruceras · 40.429030, -4.564277</span>
+        <small id="map-spot-coords">SW (225°) · Racha 20,0 kts</small>
+      </div>
+
+      <!-- Botón de capas (OpenStreetMap / Satélite / Mapa Local) -->
+      <button class="map-layer-btn" onclick="cycleMapLayer()" title="Cambiar capa de mapa">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M15 4.5l-6-2-6 2.25v14.5l6-2.25 6 2 6-2.25V2.25L15 4.5zm-6 .45l4 1.33v11.77l-4-1.33V4.95zm-4 1.12l2-.75v11.73l-2 .75V6.07zm12 11.86l-2 .75V6.95l2-.75v11.73z"/>
+        </svg>
+      </button>
+
+      <!-- Brújula Central e Indicador de Nudos -->
+      <div class="wind-compass-overlay">
+        <svg id="wind-compass-svg" class="wind-compass-svg" viewBox="0 0 260 260">
+          <circle cx="130" cy="130" r="102" fill="rgba(255,255,255,0.03)" stroke="rgba(90, 105, 120, 0.8)" stroke-width="2.6" />
+          <line x1="130" y1="54" x2="130" y2="96" stroke="rgba(90, 105, 120, 0.78)" stroke-width="1.8" />
+          <line x1="130" y1="164" x2="130" y2="196" stroke="rgba(90, 105, 120, 0.78)" stroke-width="1.8" />
+          <line x1="62" y1="130" x2="96" y2="130" stroke="rgba(90, 105, 120, 0.78)" stroke-width="1.8" />
+          <line x1="164" y1="130" x2="198" y2="130" stroke="rgba(90, 105, 120, 0.78)" stroke-width="1.8" />
+
+          <text x="130" y="47" text-anchor="middle" fill="#dc2626" font-size="18" font-weight="900" font-family="sans-serif">N</text>
+          <text x="130" y="217" text-anchor="middle" fill="#64748b" font-size="17" font-weight="800" font-family="sans-serif">S</text>
+          <text x="46" y="136" text-anchor="middle" fill="#64748b" font-size="17" font-weight="800" font-family="sans-serif">W</text>
+          <text x="214" y="136" text-anchor="middle" fill="#64748b" font-size="17" font-weight="800" font-family="sans-serif">E</text>
+
+          <circle cx="130" cy="130" r="14" fill="rgba(255,255,255,0.18)" stroke="rgba(90, 105, 120, 0.85)" stroke-width="2.8" />
+
+          <g id="wind-pointer-group" transform="rotate(140, 130, 130)">
+            <path id="wind-pointer-shape"
+                  d="M 130 114 L 111 94 L 111 18 Q 111 8 121 8 L 139 8 Q 149 8 149 18 L 149 94 Z"
+                  fill="#76e05b"
+                  stroke="rgba(255,255,255,0.65)"
+                  stroke-width="1.2" />
+            <g id="wind-pointer-text-group" transform="translate(130, 56) rotate(90)">
+              <text id="wind-pointer-kts" x="0" y="5" text-anchor="middle" fill="#0f291e" font-size="15.5" font-weight="900" font-family="sans-serif">
+                15,0 kts
+              </text>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- =====================================================================
+         PESTAÑA 1: PRONÓSTICO 7D VISUAL (ESTILO APP DE LA CAPTURA)
+    ====================================================================== -->
+    <section id="tab-forecast" class="tab-section active">
+
+      <div class="forecast-control-panel">
+        <!-- Selector de modelos en píldoras igual que en la captura -->
+        <div class="model-pills-row" id="model-pills-bar">
+          <button class="model-pill active" data-model="consensus" onclick="selectForecastModel('consensus')">CONSENSO BURGUILLO</button>
+          <button class="model-pill" data-model="gfs_seamless" onclick="selectForecastModel('gfs_seamless')">GFS27</button>
+          <button class="model-pill" data-model="ecmwf_ifs025" onclick="selectForecastModel('ecmwf_ifs025')">ECMWF</button>
+          <button class="model-pill" data-model="best_match" onclick="selectForecastModel('best_match')">AROME / HD</button>
+          <button class="model-pill" data-model="icon_seamless" onclick="selectForecastModel('icon_seamless')">ICON7</button>
+        </div>
+
+        <!-- Tira de los 7 días (solo se iluminan en verde los días que tienen al menos 1h real de planeo) -->
+        <div class="week-days-strip" id="week-days-strip"></div>
+
+        <!-- Barra continua de color de viento de toda la semana (para ver dónde hay viento sin entrar día a día) -->
+        <div class="wind-overview-bar-wrap">
+          <span class="wind-overview-icon">💨</span>
+          <div class="wind-overview-track" id="wind-overview-track" onclick="onOverviewBarClick(event)">
+            <div class="wind-overview-thumb" id="wind-overview-thumb" style="left: 5%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banda resumen de la hora seleccionada + Material Goya/North/Loft propuesto -->
+      <div class="selected-hour-gear-bar" id="selected-hour-gear-bar">
+        <span class="sh-time-badge" id="sh-time-label">Cargando horas...</span>
+        <span class="sh-gear-proposal" id="sh-gear-label">Selecciona cualquier columna horaria</span>
+      </div>
+
+      <!-- Tira Horizontal Continua por Horas (idéntica a la captura móvil) -->
+      <div class="wx-strip-wrapper">
+        <div class="wx-labels-col">
+          <div class="wx-label-day-spacer"></div>
+          <div class="wx-label-hour"><span class="wx-1h-badge">1h</span></div>
+          <div class="wx-label-sail">vela<br/>tabla</div>
+          <div class="wx-label-row">↗</div>
+          <div class="wx-label-row">kts</div>
+          <div class="wx-label-row">racha</div>
+          <div class="wx-label-row">°C</div>
+          <div class="wx-label-row">mm/h</div>
+        </div>
+
+        <div class="wx-hours-scroll" id="wx-hours-scroll" onscroll="onStripScroll()">
+          <!-- Se genera dinámicamente por app.js -->
+        </div>
+      </div>
+
+      <!-- Resumen de ventanas navegables y fuentes externas -->
+      <div class="padded-section">
+        <div id="best-windows-box" style="margin-bottom:14px;"></div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🔍 Contrastar con Fuentes Externas en El Burguillo</div>
+              <div class="card-subtitle">Enlaces directos a las coordenadas de Las Cruceras:</div>
+            </div>
+          </div>
+          <div class="source-grid">
+            <a class="source-card" href="https://www.windy.com/40.429/-4.564?arome,wind,40.429,-4.564,14" target="_blank" rel="noopener">
+              <h4>Windy (AROME / ICON) ↗</h4>
+              <p>Malla de 1.5–2.5 km ideal para ver el encañonamiento del Valle del Alberche a 48h vista.</p>
+            </a>
+            <a class="source-card" href="https://www.windguru.cz/48692" target="_blank" rel="noopener">
+              <h4>Windguru (El Burguillo) ↗</h4>
+              <p>Mira las tablas WRF 9km / ICON 7km. Con sol de tarde suma +3/4 kt de térmico con SW o NE.</p>
+            </a>
+            <a class="source-card" href="https://www.aemet.es/es/eltiempo/prediccion/municipios/barraco-el-id05022" target="_blank" rel="noopener">
+              <h4>AEMET (El Barraco) ↗</h4>
+              <p>Modelo oficial HARMONIE-AROME de rachas máximas en Guadarrama y Gredos.</p>
+            </a>
+            <a class="source-card" href="https://www.embalses.net/pantano-235-el-burguillo.html" target="_blank" rel="noopener">
+              <h4>Nivel de Agua (SAIH Tajo) ↗</h4>
+              <p>Por encima del 65–70% de capacidad el viento llega mucho más limpio a la orilla de Las Cruceras.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =====================================================================
+         PESTAÑA 2: MEDIDOR PORTÁTIL EN EL SPOT (ANEMÓMETRO DE MANO)
+    ====================================================================== -->
+    <section id="tab-spot" class="tab-section padded-section">
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📡 Medidor Portátil en el Spot</div>
+            <div class="card-subtitle">
+              Pon lo que marca tu anemómetro de mano (o gira la flecha en el mapa de arriba) para ver qué Goya + Vela montar.
+            </div>
+          </div>
+          <div class="unit-selector">
+            <button class="unit-btn active" data-unit="kt" onclick="setMeterUnit('kt')">Nudos (kt)</button>
+            <button class="unit-btn" data-unit="kmh" onclick="setMeterUnit('kmh')">km/h</button>
+            <button class="unit-btn" data-unit="ms" onclick="setMeterUnit('ms')">m/s</button>
+          </div>
+        </div>
+
+        <div class="meter-grid">
+          <div>
+            <div class="slider-box">
+              <div class="slider-top">
+                <span class="slider-label">💨 Viento Medio (Sostenido)</span>
+                <span class="slider-value" id="disp-wind-base">15.0 <small>kt</small></span>
+              </div>
+              <div class="stepper-row">
+                <button class="step-btn" onclick="adjustWind('base', -1)">−</button>
+                <input type="range" id="slider-wind-base" min="3" max="38" step="0.5" value="15" oninput="onMeterInput()" />
+                <button class="step-btn" onclick="adjustWind('base', 1)">+</button>
+              </div>
+              <div style="font-size:0.72rem; color:var(--text-muted); margin-top:5px;" id="conv-wind-base"></div>
+            </div>
+
+            <div class="slider-box">
+              <div class="slider-top">
+                <span class="slider-label">⚡ Racha Máxima (Gust)</span>
+                <span class="slider-value" id="disp-wind-gust" style="color:var(--accent-mint);">20.0 <small>kt</small></span>
+              </div>
+              <div class="stepper-row">
+                <button class="step-btn" onclick="adjustWind('gust', -1)">−</button>
+                <input type="range" id="slider-wind-gust" min="3" max="45" step="0.5" value="20" oninput="onMeterInput()" />
+                <button class="step-btn" onclick="adjustWind('gust', 1)">+</button>
+              </div>
+              <div style="font-size:0.72rem; color:var(--text-muted); margin-top:5px;" id="conv-wind-gust"></div>
+            </div>
+          </div>
+
+          <div class="slider-box" style="margin-bottom:0;">
+            <div class="slider-top">
+              <span class="slider-label">🧭 Dirección del Viento</span>
+              <span class="slider-value" id="disp-wind-dir" style="font-size:1.15rem; color:#38bdf8;">SW (225°)</span>
+            </div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:5px;">
+              Toca el rumbo o gira la flecha directamente con el dedo en el mapa superior:
+            </div>
+            <div class="compass-wheel" id="compass-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta de Propuesta Inmediata de Material -->
+      <div id="live-rec-card" class="rec-banner"></div>
+
+      <!-- Guardar Medición del Anemómetro -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📓 Cuaderno de Mediciones en el Pantano</div>
+            <div class="card-subtitle">Guarda las lecturas reales de tu medidor portátil en Las Cruceras / El Barraco.</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Zona del Embalse</label>
+            <select id="meas-zone" class="form-control">
+              <option value="Las Cruceras (Centro)">Las Cruceras (Centro)</option>
+              <option value="Orilla El Barraco (Oeste)">Orilla El Barraco (Oeste)</option>
+              <option value="Arroyo de la Parra / Norte">Arroyo de la Parra / Norte</option>
+              <option value="Zona Presa / Sur">Zona Presa / Sur</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Notas de la sesión (opcional)</label>
+            <input type="text" id="meas-notes" class="form-control" placeholder="Ej: Planeando perfecto con Proton 118 y Loft 6.8..." />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="saveManualMeasurement()">
+          💾 Guardar Medición Actual
+        </button>
+        <div id="measurements-list-container" style="margin-top:12px;"></div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         PESTAÑA 3: HISTORIAL Y ESTADÍSTICA DEL BURGUILLO
+    ====================================================================== -->
+    <section id="tab-history" class="tab-section padded-section">
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📊 Histórico de Vientos y Rachas · El Burguillo</div>
+            <div class="card-subtitle" id="history-meta-subtitle">
+              Analizando patrones por meses, horas de luz y orientación del viento.
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <select id="hist-month-filter" class="form-control" style="width:auto;" onchange="loadHistoryStats()">
+              <option value="0">Todos los meses (Año completo)</option>
+              <option value="1">Enero</option>
+              <option value="2">Febrero</option>
+              <option value="3">Marzo</option>
+              <option value="4">Abril</option>
+              <option value="5">Mayo</option>
+              <option value="6">Junio</option>
+              <option value="7">Julio</option>
+              <option value="8">Agosto</option>
+              <option value="9">Septiembre</option>
+              <option value="10">Octubre</option>
+              <option value="11">Noviembre</option>
+              <option value="12">Diciembre</option>
+            </select>
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:0.76rem; background:var(--bg-card-alt); padding:6px 10px; border-radius:8px; border:1px solid var(--border-color); cursor:pointer;">
+              <input type="checkbox" id="hist-local-boost" checked onchange="loadHistoryStats()" />
+              Ajuste térmico/canalización Burguillo
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row" id="hist-kpi-row"></div>
+
+        <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:var(--bg-card-alt); padding:9px 12px; border-radius:9px; margin-top:8px;">
+          <span style="font-size:0.76rem; color:var(--text-muted);" id="hist-status-msg">
+            17.544 horas almacenadas en base de datos local.
+          </span>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.74rem;" onclick="downloadMoreHistory(2)">📥 Actualizar 2 años</button>
+            <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.74rem;" onclick="downloadMoreHistory(5)">📥 Capturar 5 años</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🏄‍♂️ Uso de tu Quiver Goya / North / Loft según el Histórico</div>
+            <div class="card-subtitle">Porcentaje de sesiones navegables en El Burguillo para cada combinación (Rider: 70 kg):</div>
+          </div>
+        </div>
+        <div id="hist-gear-usage"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🕒 Mapa de Calor: Mes × Hora del Día (10:00 a 20:00)</div>
+            <div class="card-subtitle">Racha media (kt) y % de días con planeo por hora solar.</div>
+          </div>
+        </div>
+        <div class="table-scroll" id="heatmap-container"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🧭 Rosa de los Vientos del Embalse</div>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Rumbo</th>
+                <th>Comportamiento</th>
+                <th>Frec.</th>
+                <th>Cuota Planeo</th>
+                <th>Base Media</th>
+                <th>Racha Media</th>
+              </tr>
+            </thead>
+            <tbody id="hist-rose-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         PESTAÑA 4: MI QUIVER (INVENTARIO DE VELAS, TABLAS Y PESO)
+    ====================================================================== -->
+    <section id="tab-quiver" class="tab-section padded-section">
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">⚖️ Datos del Navegante (Rider)</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tu Peso (kg)</label>
+            <input type="number" id="rider-weight" class="form-control" value="70" min="40" max="140" onchange="saveRiderSettings()" />
+          </div>
+          <div class="form-group">
+            <label>Nivel / Estilo</label>
+            <input type="text" id="rider-style" class="form-control" value="Slalom / Freerace" onchange="saveRiderSettings()" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🏄‍♂️ Mis Tablas Goya</div>
+          </div>
+          <button class="btn btn-primary" onclick="addBoardPrompt()">+ Añadir Tabla</button>
+        </div>
+        <div id="quiver-boards-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">⛵ Mis Velas North 3Di & Loft Sails</div>
+          </div>
+          <button class="btn btn-primary" onclick="addSailPrompt()">+ Añadir Vela</button>
+        </div>
+        <div id="quiver-sails-list"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="./app.js?v=6"></script>
+</body>
+</html>

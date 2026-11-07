@@ -1,0 +1,17 @@
+{
+  "name": "WindMon Burguillo - Windsurf & Quiver Advisor",
+  "short_name": "WindMon",
+  "description": "Histórico, pronóstico a 7 días y recomendador de Tabla + Vela para el Pantano del Burguillo",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0b132b",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230b132b'/><path d='M28 78 L75 78 L65 84 L22 84 Z' fill='%230ea5e9'/><path d='M42 75 L46 16 C68 28 76 50 70 72 Z' fill='%2310b981' opacity='0.9'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

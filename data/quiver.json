@@ -1,0 +1,91 @@
+{
+  "rider": {
+    "name": "Rider Burguillo",
+    "weight_kg": 70,
+    "level": "avanzado",
+    "style": "Slalom / Freerace",
+    "prefer_comfort_in_gusts": true
+  },
+  "boards": [
+    {
+      "id": "goya-proton-137",
+      "name": "Goya Proton 137L",
+      "brand_model": "Goya Proton Pro Slalom 137L (Manga ~85 cm)",
+      "volume_l": 137,
+      "width_cm": 85,
+      "type": "Slalom Lightwind",
+      "min_sail_m2": 6.6,
+      "max_sail_m2": 9.5,
+      "ideal_wind_min_kt": 10,
+      "ideal_wind_max_kt": 16,
+      "fin_cm": "44–46 cm Slalom Deep Tuttle",
+      "notes": "Reina del térmico y días racheados de 10 a 16 kt. Con 70 kg y 85 cm de manga pasa todos los huecos del Burguillo sin perder el planeo."
+    },
+    {
+      "id": "goya-proton-118",
+      "name": "Goya Proton 118L",
+      "brand_model": "Goya Proton Pro Slalom 118L (Manga ~75 cm)",
+      "volume_l": 118,
+      "width_cm": 75,
+      "type": "Slalom Medium",
+      "min_sail_m2": 5.8,
+      "max_sail_m2": 8.4,
+      "ideal_wind_min_kt": 13,
+      "ideal_wind_max_kt": 21,
+      "fin_cm": "38–40 cm Slalom Tuttle",
+      "notes": "Tu tabla más polivalente en El Burguillo: admite las 3 velas (7.7, 6.8 y 6.0) y vuela cuando el SW o NE se asienta entre 13 y 21 nudos."
+    },
+    {
+      "id": "goya-bolt4-99",
+      "name": "Goya Bolt 4 99L",
+      "brand_model": "Goya Bolt 4 Freerace Carbon 99L (Manga ~63 cm)",
+      "volume_l": 99,
+      "width_cm": 63,
+      "type": "Freerace High-Wind",
+      "min_sail_m2": 4.7,
+      "max_sail_m2": 7.0,
+      "ideal_wind_min_kt": 17,
+      "ideal_wind_max_kt": 30,
+      "fin_cm": "32–34 cm Freerace Tuttle",
+      "notes": "Control total para días de SW fuerte o nortada (>17-18 kt sostenidos con rachas de 22-28 kt), cuando el centro del pantano levanta choppy."
+    }
+  ],
+  "sails": [
+    {
+      "id": "north-freespeed-77",
+      "name": "North Freespeed Gen1 3Di 7.7 m²",
+      "brand_model": "North Sails 3Di Molded Freerace 7.7 m²",
+      "size_m2": 7.7,
+      "cambers": 0,
+      "type": "3Di Freerace / Lightwind",
+      "wind_min_kt": 10.5,
+      "wind_sweet_kt": 13.5,
+      "wind_max_kt": 17.5,
+      "notes": "Construcción 3Di ultra estable: con tus 70 kg te saca al planeo desde 10.5-11 kt de racha sobre la Proton 137L o 118L."
+    },
+    {
+      "id": "loft-switchblade-68",
+      "name": "Loft Switchblade 6.8 m² (3 Cam)",
+      "brand_model": "Loft Sails Switchblade 6.8 m² · 3 Cambers",
+      "size_m2": 6.8,
+      "cambers": 3,
+      "type": "Freerace 3-Cam",
+      "wind_min_kt": 13.5,
+      "wind_sweet_kt": 17.0,
+      "wind_max_kt": 22.0,
+      "notes": "Enorme rango de viento gracias a los 3 cambers. Perfecta para condiciones racheadas de pantano: tira abajo y ni se inmuta en rachas de 21-22 kt."
+    },
+    {
+      "id": "north-freerace-60",
+      "name": "North Freerace 3Di 6.0 m² (AirCam)",
+      "brand_model": "North Sails Freerace 3Di AirCam 6.0 m²",
+      "size_m2": 6.0,
+      "cambers": 1,
+      "type": "3Di Freerace AirCam",
+      "wind_min_kt": 17.0,
+      "wind_sweet_kt": 21.0,
+      "wind_max_kt": 28.0,
+      "notes": "Ligera y rapidísima con AirCam: ideal en la Goya Bolt 4 99L (o en la Proton 118L si hay rachas de 22 kt pero muchos huecos)."
+    }
+  ]
+}
