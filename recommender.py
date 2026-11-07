@@ -40,22 +40,12 @@ def recommend_gear(
     # Un rider más pesado necesita equivalencia de ~1-2 nudos más para planear con la misma vela
     weight_factor = (75.0 / max(45.0, weight_kg)) ** 0.55
 
-    # Viento efectivo para elegir VELA:
-    # En pantano miramos una combinación entre base y racha para poder planear en las rachas
-    # sin ir completamente pasado.
-    eff_sail_kt = (0.58 * base_kt + 0.42 * gust_kt) * weight_factor
-
-    # Viento efectivo para elegir TABLA:
-    # Si hay mucha diferencia base-racha (>= 6 kt) o la dirección en el Burguillo es muy racheada,
-    # penalizamos bajar de volumen demasiado pronto para no hundirse en los huecos ("lulls").
-    is_gusty_condition = (gust_diff >= 6.0) or (spot_info["gustiness"] in ("alta", "muy alta"))
-    if is_gusty_condition:
-        eff_board_kt = (0.75 * base_kt + 0.25 * gust_kt) * weight_factor
-    else:
-        eff_board_kt = (0.55 * base_kt + 0.45 * gust_kt) * weight_factor
+    # La recomendación de material y el estado usan el viento medio, no la racha.
+    eff_sail_kt = base_kt * weight_factor
+    eff_board_kt = eff_sail_kt
 
     # Estado general de navegabilidad
-    if gust_kt < 10.0 or eff_sail_kt < 9.5:
+    if eff_sail_kt < 9.5:
         status = "no_planeo"
         status_label = "Viento insuficiente para planeo (Drizar / Paseo / SUP)"
         status_color = "slate"
@@ -105,10 +95,6 @@ def recommend_gear(
         elif eff_sail_kt > w_max:
             penalty += (eff_sail_kt - w_max) * 3.2
 
-        # Si la racha supera claramente el máximo de la vela, penalizar por descontrol
-        if gust_kt * weight_factor > w_max + 4.0:
-            penalty += (gust_kt * weight_factor - (w_max + 4.0)) * 1.5
-
         score = max(0.0, 100.0 - (dist_sweet * 6.0 + penalty * 5.0))
         scored_sails.append((score, sail))
 
@@ -143,27 +129,21 @@ def recommend_gear(
         # Sinergia específica de Slalom/Freerace según medida de vela y condiciones de pantano
         vol = float(board.get("volume_l", 118))
         if best_sail_size >= 7.4:
-            # Con 7.7 m²: priorizar 137L hasta ~14 kt efectivos o si está racheado; 118L si el viento es sólido (14-17 kt)
-            if vol >= 130 and (eff_board_kt <= 14.2 or is_gusty_condition):
+            # Con 7.7 m²: priorizar 137L hasta ~14 kt efectivos; 118L si el viento es sólido (14-17 kt)
+            if vol >= 130 and eff_board_kt <= 14.2:
                 penalty -= 8.0
-            elif 110 <= vol < 130 and eff_board_kt > 14.2 and not is_gusty_condition:
+            elif 110 <= vol < 130 and eff_board_kt > 14.2:
                 penalty -= 6.0
         elif 6.5 <= best_sail_size < 7.4:
             # Con 6.8 m² (3 Cam): su pareja estrella en el Burguillo es la Goya Proton 118L
             if 110 <= vol <= 125:
                 penalty -= 10.0
-            elif vol >= 130 and base_kt < 11.5 and is_gusty_condition:
-                penalty -= 6.0
         else:
-            # Con 6.0 m² (AirCam): Goya Bolt 4 99L con viento asentado (>=17.5 kt efectivos), o Proton 118L si hay muchos huecos
+            # Con 6.0 m² (AirCam): Goya Bolt 4 99L con viento medio >=17.2 kt o Proton 118L con menos viento
             if vol <= 105 and eff_board_kt >= 17.2:
                 penalty -= 12.0
             elif 110 <= vol <= 125 and eff_board_kt < 17.2:
                 penalty -= 8.0
-
-        # En pantano muy racheado, premiar que el volumen sea al menos peso_rider + 25L si el viento base < 14 kt
-        if is_gusty_condition and base_kt < 14.0 and vol < (weight_kg + 25):
-            penalty += ((weight_kg + 25) - vol) * 0.6
 
         score = max(0.0, 100.0 - (dist_w * 5.0 + penalty * 4.0))
         scored_boards.append((score, board))
@@ -209,7 +189,7 @@ def recommend_gear(
             "dir_deg": round(dir_deg, 0),
             "eff_sail_kt": round(eff_sail_kt, 1),
             "eff_board_kt": round(eff_board_kt, 1),
-            "is_gusty": is_gusty_condition
+            "is_gusty": gust_diff >= 6.0 or spot_info["gustiness"] in ("alta", "muy alta")
         },
         "spot_analysis": spot_info,
         "primary": {

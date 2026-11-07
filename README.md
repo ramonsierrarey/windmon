@@ -65,6 +65,7 @@ Diseñado para cuando estás en la orilla con tu **medidor de viento portátil**
   - Avisa cuando el rumbo entra cruzado por encima de las montañas (**NW**, **WNW**, **SE**, **ESE**, **E**), donde se producen grandes rachas seguidas de huecos ("calmas").
 - **Propuesta de Material en Tiempo Real:**
   - **Tabla Titular + Vela Titular** + porcentaje de adecuación.
+  - El estado de viento y la elección de tabla y vela se calculan con los nudos de viento medio; la racha se muestra aparte y se usa para los consejos de trimado.
   - **Opción Alternativa** (por si prefieres asegurar planeo en los huecos o más control en la racha).
   - **Consejos de trimado:** tensión de amura (*downhaul*), escota (*outhaul*) y posición del pie de mástil en función del diferencial entre viento medio y racha.
 - **Cuaderno del Spot:** Botón para guardar la medición real con fecha, hora, zona del pantano (*Las Cruceras*, *El Barraco*, *Puente de la Gaznata*, *Presa*) y notas de la sesión.

@@ -205,13 +205,12 @@ function recommendGearLocal(windSpeedKt, windGustKt, compass, quiver) {
   const weightKg = Number(quiver?.rider?.weight_kg || 70);
   const weightFactor = Math.pow(75.0 / Math.max(45.0, weightKg), 0.55);
 
-  const effSailKt = (0.58 * baseKt + 0.42 * gustKt) * weightFactor;
-  const isGusty = gustDiff >= 6.0 || spotInfo.gustiness === "alta" || spotInfo.gustiness === "muy alta";
-  const effBoardKt = (isGusty ? (0.75 * baseKt + 0.25 * gustKt) : (0.55 * baseKt + 0.45 * gustKt)) * weightFactor;
+  const effSailKt = baseKt * weightFactor;
+  const effBoardKt = effSailKt;
 
   let status = "optimo";
   let statusLabel = "¡Condiciones óptimas de planeo!";
-  if (gustKt < 12.0 || effSailKt < 10.5) {
+  if (effSailKt < 10.5) {
     status = "no_planeo";
     statusLabel = "Sin viento para planear (< 11 kt)";
   } else if (effSailKt < 13.5) {
@@ -234,7 +233,6 @@ function recommendGearLocal(windSpeedKt, windGustKt, compass, quiver) {
     let penalty = 0;
     if (effSailKt < wMin) penalty += (wMin - effSailKt) * 2.8;
     else if (effSailKt > wMax) penalty += (effSailKt - wMax) * 3.2;
-    if (gustKt * weightFactor > wMax + 4) penalty += (gustKt * weightFactor - (wMax + 4)) * 1.5;
     const score = Math.max(0, 100 - (dist * 6 + penalty * 5));
     return { score, sail };
   }).sort((a, b) => b.score - a.score);
@@ -258,19 +256,15 @@ function recommendGearLocal(windSpeedKt, windGustKt, compass, quiver) {
 
     const vol = Number(board.volume_l || 118);
     if (bestSailSize >= 7.4) {
-      if (vol >= 130 && (effBoardKt <= 14.2 || isGusty)) penalty -= 8;
-      else if (vol >= 110 && vol < 130 && effBoardKt > 14.2 && !isGusty) penalty -= 6;
+      if (vol >= 130 && effBoardKt <= 14.2) penalty -= 8;
+      else if (vol >= 110 && vol < 130 && effBoardKt > 14.2) penalty -= 6;
     } else if (bestSailSize >= 6.5 && bestSailSize < 7.4) {
       if (vol >= 110 && vol <= 125) penalty -= 10;
-      else if (vol >= 130 && baseKt < 11.5 && isGusty) penalty -= 6;
     } else {
       if (vol <= 105 && effBoardKt >= 17.2) penalty -= 12;
       else if (vol >= 110 && vol <= 125 && effBoardKt < 17.2) penalty -= 8;
     }
 
-    if (isGusty && baseKt < 14 && vol < weightKg + 25) {
-      penalty += ((weightKg + 25) - vol) * 0.6;
-    }
     const score = Math.max(0, 100 - (dist * 5 + penalty * 4));
     return { score, board };
   }).sort((a, b) => b.score - a.score);
@@ -293,7 +287,7 @@ function recommendGearLocal(windSpeedKt, windGustKt, compass, quiver) {
     statusLabel,
     effSailKt: effSailKt.toFixed(1),
     effBoardKt: effBoardKt.toFixed(1),
-    isGusty,
+    isGusty: gustDiff >= 6.0 || spotInfo.gustiness === "alta" || spotInfo.gustiness === "muy alta",
     spotInfo,
     primary: {
       board: bestBoard,
@@ -891,7 +885,7 @@ function updateSpotRecommendationUI() {
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <span class="status-badge">${rec.statusLabel}</span>
       <span style="font-size:0.75rem; color:var(--text-muted);">
-        Viento efectivo: <strong>${rec.effSailKt} kt</strong> · Adecuación: <strong>${rec.primary.matchScore}%</strong>
+        Viento medio efectivo: <strong>${rec.effSailKt} kt</strong> · Adecuación: <strong>${rec.primary.matchScore}%</strong>
       </span>
     </div>
 
