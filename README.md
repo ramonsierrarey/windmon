@@ -41,6 +41,19 @@ python server.py
 
 ---
 
+## 🌐 Publicar en GitHub Pages para usarlo en el móvil
+
+El repositorio ya incluye el flujo `.github/workflows/deploy-pages.yml`. Para publicarlo:
+
+1. Sube el proyecto a un repositorio de GitHub en la rama `main` o `master`.
+2. En GitHub, abre **Settings → Pages** y selecciona **GitHub Actions** como origen del despliegue.
+3. Espera a que termine el flujo **Deploy WindMon PWA to GitHub Pages** en la pestaña **Actions**.
+4. Abre la URL que aparece en **Settings → Pages** desde el móvil y usa **Añadir a pantalla de inicio**.
+
+GitHub Pages sirve la versión estática de la PWA: el pronóstico necesita conexión a internet; las mediciones y el quiver se guardan solo en el almacenamiento local de ese navegador/dispositivo; y el histórico usa los datos precomputados incluidos, que no se pueden ampliar desde Pages. Para actualizar el histórico o compartir datos entre dispositivos hay que ejecutar `server.py` en un servicio que admita Python.
+
+---
+
 ## 🧭 Módulos de la Solución
 
 ### 1. 📡 Modo Medidor Portátil en el Spot (Pestaña *Medidor Spot*)

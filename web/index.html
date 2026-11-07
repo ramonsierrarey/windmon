@@ -329,8 +329,8 @@
             17.544 horas almacenadas en base de datos local.
           </span>
           <div style="display:flex; gap:6px;">
-            <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.74rem;" onclick="downloadMoreHistory(2)">📥 Actualizar 2 años</button>
-            <button class="btn btn-secondary" style="padding:5px 10px; font-size:0.74rem;" onclick="downloadMoreHistory(5)">📥 Capturar 5 años</button>
+            <button class="btn btn-secondary" id="history-refresh-2" style="padding:5px 10px; font-size:0.74rem;" onclick="downloadMoreHistory(2)">📥 Actualizar 2 años</button>
+            <button class="btn btn-secondary" id="history-refresh-5" style="padding:5px 10px; font-size:0.74rem;" onclick="downloadMoreHistory(5)">📥 Capturar 5 años</button>
           </div>
         </div>
       </div>
@@ -427,6 +427,7 @@
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="./app.js?v=6"></script>
+  <script src="./deployment-config.js"></script>
+  <script src="./app.js?v=7"></script>
 </body>
 </html>

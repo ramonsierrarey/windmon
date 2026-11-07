@@ -4,6 +4,7 @@
  */
 
 const BURGUILLO_COORDS = { lat: 40.429030, lon: -4.564277 };
+const IS_STATIC_DEPLOYMENT = window.WINDMON_STATIC_DEPLOYMENT === true;
 
 const COMPASS_16 = [
   "N", "NNE", "NE", "ENE",
@@ -944,13 +945,15 @@ async function saveManualMeasurement() {
   state.measurements.unshift(entry);
   localStorage.setItem("windmon_measurements", JSON.stringify(state.measurements.slice(0, 100)));
 
-  try {
-    await fetch("/api/measurements", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(entry)
-    });
-  } catch (_) {}
+  if (!IS_STATIC_DEPLOYMENT) {
+    try {
+      await fetch("/api/measurements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry)
+      });
+    } catch (_) {}
+  }
 
   document.getElementById("meas-notes").value = "";
   renderMeasurementsList();
@@ -1003,12 +1006,14 @@ async function loadHistoryStats() {
   const subtitle = document.getElementById("history-meta-subtitle");
 
   let data = null;
-  try {
-    const res = await fetch(`./api/history/stats?month=${monthFilter}&local_boost=${localBoost}`);
-    if (res.ok) {
-      data = await res.json();
-    }
-  } catch (_) {}
+  if (!IS_STATIC_DEPLOYMENT) {
+    try {
+      const res = await fetch(`./api/history/stats?month=${monthFilter}&local_boost=${localBoost}`);
+      if (res.ok) {
+        data = await res.json();
+      }
+    } catch (_) {}
+  }
 
   if (!data || !data.has_data) {
     try {
@@ -1030,6 +1035,11 @@ async function loadHistoryStats() {
 
 async function downloadMoreHistory(years) {
   const msg = document.getElementById("hist-status-msg");
+  if (IS_STATIC_DEPLOYMENT) {
+    msg.textContent = "GitHub Pages solo sirve archivos estáticos. Para ampliar el histórico, inicia el servidor Python.";
+    return;
+  }
+
   msg.textContent = `⏳ Descargando histórico de ${years} años...`;
   try {
     const res = await fetch("/api/history/fetch", {
@@ -1146,13 +1156,15 @@ async function persistQuiver() {
   localStorage.setItem("windmon_quiver_v3", JSON.stringify(state.quiver));
   updateHeaderPill();
   updateSpotRecommendationUI();
-  try {
-    await fetch("/api/quiver", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quiver: state.quiver })
-    });
-  } catch (_) {}
+  if (!IS_STATIC_DEPLOYMENT) {
+    try {
+      await fetch("/api/quiver", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quiver: state.quiver })
+      });
+    } catch (_) {}
+  }
 }
 
 function saveRiderSettings() {
@@ -1283,6 +1295,14 @@ async function initApp() {
   updateSpotRecommendationUI();
   renderMeasurementsList();
   updateHeaderPill();
+  if (IS_STATIC_DEPLOYMENT) {
+    document.getElementById("hist-month-filter").disabled = true;
+    document.getElementById("hist-local-boost").disabled = true;
+    document.getElementById("history-refresh-2").disabled = true;
+    document.getElementById("history-refresh-5").disabled = true;
+    document.getElementById("hist-status-msg").textContent =
+      "Histórico precomputado. Quiver y mediciones se guardan solo en este dispositivo; ampliar datos requiere el servidor Python.";
+  }
   loadWeeklyForecast();
 }
 

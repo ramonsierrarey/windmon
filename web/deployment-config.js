@@ -1,0 +1,1 @@
+window.WINDMON_STATIC_DEPLOYMENT = false;
