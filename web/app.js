@@ -210,9 +210,9 @@ function recommendGearLocal(windSpeedKt, windGustKt, compass, quiver) {
 
   let status = "optimo";
   let statusLabel = "¡Condiciones óptimas de planeo!";
-  if (effSailKt < 10.5) {
+  if (effSailKt < 9.5) {
     status = "no_planeo";
-    statusLabel = "Sin viento para planear (< 11 kt)";
+    statusLabel = "Viento medio insuficiente para planear";
   } else if (effSailKt < 13.5) {
     status = "marginal";
     statusLabel = "Planeo técnico / Viento suave (7.7 m² + 137L)";
@@ -608,8 +608,7 @@ function renderWeekDaysAndOverviewBar() {
   const track = document.getElementById("wind-overview-track");
   const segsHtml = state.allFlatHours.map(h => {
     // Pintamos la barra según el viento efectivo / racha solo cuando realmente sube
-    const refKt = (h.rec && h.rec.status !== "no_planeo") ? Math.max(h.ws, h.wg * 0.82) : h.ws;
-    const bg = getWindBgColor(refKt);
+    const bg = getWindBgColor(h.ws);
     return `<div class="wind-overview-seg" style="background:${bg};"></div>`;
   }).join("");
 
@@ -881,37 +880,46 @@ function updateSpotRecommendationUI() {
   if (!rec || !card) return;
 
   card.className = `rec-banner status-${rec.status}`;
+  const scoreLabel = rec.status === "no_planeo"
+    ? ""
+    : ` · Adecuación: <strong>${rec.primary.matchScore}%</strong>`;
+  const gearRecommendation = rec.status === "no_planeo"
+    ? `
+      <div style="background:rgba(19,31,43,0.7); border-radius:9px; padding:12px; font-size:0.82rem; border:1px solid var(--border-color);">
+        El viento medio es insuficiente: no se recomienda montar tabla ni vela. La racha es solo informativa.
+      </div>
+    `
+    : `
+      <div class="rec-combo-grid">
+        <div class="gear-box">
+          <div class="gear-type">🏄‍♂️ TABLA TITULAR RECOMENDADA</div>
+          <div class="gear-name">${rec.primary.board.name}</div>
+          <div class="gear-specs">
+            Volumen: <strong>${rec.primary.board.volume_l} L</strong> · Manga: ${rec.primary.board.width_cm || "-"} cm<br/>
+            Aleta: ${rec.primary.board.fin_cm || "Estándar"}
+          </div>
+        </div>
+        <div class="gear-box">
+          <div class="gear-type">⛵ VELA TITULAR RECOMENDADA</div>
+          <div class="gear-name">${rec.primary.sail.name}</div>
+          <div class="gear-specs">
+            Rango óptimo: <strong>${rec.primary.sail.wind_min_kt}–${rec.primary.sail.wind_max_kt} kt</strong> (Dulce: ${rec.primary.sail.wind_sweet_kt} kt)<br/>
+            Cambers: ${rec.primary.sail.cambers || 0}
+          </div>
+        </div>
+      </div>
+      <div style="background:rgba(19,31,43,0.7); border-radius:9px; padding:9px 11px; font-size:0.78rem; border:1px solid var(--border-color);">
+        <strong>💡 Opción Alternativa:</strong> ${rec.alternative.board.name} + ${rec.alternative.sail.name}
+      </div>
+    `;
   card.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
       <span class="status-badge">${rec.statusLabel}</span>
       <span style="font-size:0.75rem; color:var(--text-muted);">
-        Viento medio efectivo: <strong>${rec.effSailKt} kt</strong> · Adecuación: <strong>${rec.primary.matchScore}%</strong>
+        Viento medio efectivo: <strong>${rec.effSailKt} kt</strong>${scoreLabel}
       </span>
     </div>
-
-    <div class="rec-combo-grid">
-      <div class="gear-box">
-        <div class="gear-type">🏄‍♂️ TABLA TITULAR RECOMENDADA</div>
-        <div class="gear-name">${rec.primary.board.name}</div>
-        <div class="gear-specs">
-          Volumen: <strong>${rec.primary.board.volume_l} L</strong> · Manga: ${rec.primary.board.width_cm || "-"} cm<br/>
-          Aleta: ${rec.primary.board.fin_cm || "Estándar"}
-        </div>
-      </div>
-      <div class="gear-box">
-        <div class="gear-type">⛵ VELA TITULAR RECOMENDADA</div>
-        <div class="gear-name">${rec.primary.sail.name}</div>
-        <div class="gear-specs">
-          Rango óptimo: <strong>${rec.primary.sail.wind_min_kt}–${rec.primary.sail.wind_max_kt} kt</strong> (Dulce: ${rec.primary.sail.wind_sweet_kt} kt)<br/>
-          Cambers: ${rec.primary.sail.cambers || 0}
-        </div>
-      </div>
-    </div>
-
-    <div style="background:rgba(19,31,43,0.7); border-radius:9px; padding:9px 11px; font-size:0.78rem; border:1px solid var(--border-color);">
-      <strong>💡 Opción Alternativa:</strong> ${rec.alternative.board.name} + ${rec.alternative.sail.name}
-    </div>
-
+    ${gearRecommendation}
     <ul class="trim-list">
       ${rec.tips.map(t => `<li>${t}</li>`).join("")}
     </ul>
@@ -931,8 +939,8 @@ async function saveManualMeasurement() {
     wind_gust_kt: Number(state.windGustKt.toFixed(1)),
     wind_compass: state.windCompass,
     spot_zone: zone,
-    recommended_board: rec?.primary?.board?.name || "-",
-    recommended_sail: rec?.primary?.sail?.name || "-",
+    recommended_board: rec?.status === "no_planeo" ? "-" : (rec?.primary?.board?.name || "-"),
+    recommended_sail: rec?.status === "no_planeo" ? "-" : (rec?.primary?.sail?.name || "-"),
     notes
   };
 

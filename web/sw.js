@@ -1,9 +1,9 @@
-const CACHE_NAME = "windmon-burguillo-v7";
+const CACHE_NAME = "windmon-burguillo-v8";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./app.js",
+  "./styles.css?v=6",
+  "./app.js?v=8",
   "./deployment-config.js",
   "./manifest.json",
   "./history_fallback.json"
